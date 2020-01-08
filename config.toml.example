@@ -1,0 +1,9 @@
+[slackmgmt]
+token = 'xoxp-blah'
+
+[slackmgmt.plugins.BanPlugin]
+[slackmgmt.plugins.BanPlugin.CDPJJ73SB]  # politics
+users = [
+    "U6DT2Q8HM",  # Daniel Wallace
+    "U6LGC8U7N",  # Steven
+]
