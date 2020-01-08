@@ -20,12 +20,13 @@ class Handler:
         resp = {}
         if 'challenge' in data:
             resp['challenge'] = data['challenge']
+        await self.put(data['event'])
         return web.json_response(resp, status=200)
 
 
-def make_app(put):
+def make_app(queue):
     app = web.Application()
-    handler = Handler(put)
+    handler = Handler(queue.put)
     app.add_routes([
         web.post('/webhook', handler.webhook),
     ])
