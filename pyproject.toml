@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "slackmgmt"
+version = "0.1.0"
+description = "Manage slack instance"
+authors = ["Daniel Wallace <danielwallace@gtmanfred.com>"]
+license = "Apache-2.0"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiohttp = "^3.6.2"
+click = "^7.0"
+toml = "^0.10.0"
+
+[tool.poetry.dev-dependencies]
+tox = "^3.14"
+pytest = "^5.3"
+
+[build-system]
+requires = ["poetry>=1.0.0"]
+build-backend = "poetry.masonry.api"
