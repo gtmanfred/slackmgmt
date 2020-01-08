@@ -6,7 +6,7 @@ authors = ["Daniel Wallace <danielwallace@gtmanfred.com>"]
 license = "Apache-2.0"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 aiohttp = "^3.6.2"
 toml = "^0.10.0"
 
