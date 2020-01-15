@@ -1,20 +1,22 @@
+import asyncio
 import logging
+import typing
 
 from aiohttp import web
 
 
 class Handler:
 
-    def __init__(self, put):
-        self.put = put
+    def __init__(self, queue : asyncio.Queue):
+        self.put = queue.put
 
     @property
-    def log(self):
+    def log(self) -> logging.Logger:
         if not hasattr(self, '_logger'):
             self._logger = logging.getLogger(__name__)
         return self._logger
 
-    async def webhook(self, request):
+    async def webhook(self, request : web.Request) -> web.Response:
         data = await request.json()
         self.log.debug(f'data={data}')
         resp = {}
@@ -24,9 +26,9 @@ class Handler:
         return web.json_response(resp, status=200)
 
 
-def make_app(queue):
+def make_app(queue : asyncio.Queue) -> web.Application:
     app = web.Application()
-    handler = Handler(queue.put)
+    handler = Handler(queue)
     app.add_routes([
         web.post('/webhook', handler.webhook),
     ])

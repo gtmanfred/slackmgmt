@@ -6,7 +6,7 @@ from . import bot
 from . import server
 
 
-def main():
+def main() -> None:
     loop = asyncio.get_event_loop()
     instance = bot.SlackBot.from_argv()
     instance.setup_bots()

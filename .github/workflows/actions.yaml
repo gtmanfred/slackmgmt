@@ -25,5 +25,7 @@ jobs:
         python -m poetry install
     - name: Lint with flake8
       run: |
-        # stop the build if there are Python syntax errors or undefined names
         python -m poetry run flake8
+    - name: Run mypy on files
+      run: |
+        python -m poetry run mypy
