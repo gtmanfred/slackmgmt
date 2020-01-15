@@ -29,19 +29,19 @@ class PluginLoader(importlib.abc.SourceLoader):
     def get_filename(self, fullname: str) -> typing.Union[bytes, str]:
         return self.path
 
-    def get_data(self, path : typing.Union[bytes, str]) -> bytes:
+    def get_data(self, path: typing.Union[bytes, str]) -> bytes:
         with open(path, 'rb') as codefile:
             return codefile.read()
 
 
 class SlackBot:
-    bots : typing.List[SlackBot] = []
-    debug : bool
-    _channels : typing.List[typing.Dict]
-    queue : asyncio.Queue
-    config : typing.Dict
-    token : str
-    events_api : bool
+    bots: typing.ClassVar[typing.List[SlackBot]] = []  # noqa: F821
+    debug: typing.ClassVar[bool]
+    _channels: typing.ClassVar[typing.List[typing.Dict]]
+    queue: asyncio.Queue
+    config: typing.Dict
+    token: str
+    events_api: bool
 
     def __init__(self, token, config, events_api=False) -> None:
         self.token = token
@@ -74,7 +74,7 @@ class SlackBot:
             self.loop.create_task(self.bots[-1].consumer())
 
     def _find_bot_classes(self) -> typing.Set[typing.Tuple[str, typing.Type]]:
-        classes : typing.Set[typing.Tuple[str, typing.Type]] = set()
+        classes: typing.Set[typing.Tuple[str, typing.Type]] = set()
         path = pathlib.Path(__file__).parent / 'plugins'
         loader_details = (
             typing.cast(importlib.abc.Loader, PluginLoader),
@@ -100,7 +100,7 @@ class SlackBot:
             self._bot_classes = self._find_bot_classes()
         return self._bot_classes
 
-    async def channels(self, refresh : bool = False) -> typing.List[typing.Dict]:
+    async def channels(self, refresh: bool = False) -> typing.List[typing.Dict]:
         if refresh is True or not hasattr(SlackBot, '_channels'):
             SlackBot._channels = await self._client.conversations_list()
         return SlackBot._channels
@@ -181,7 +181,7 @@ class SlackBot:
                 break
 
     @classmethod
-    def from_config(cls, cfg : typing.Dict) -> SlackBot:
+    def from_config(cls, cfg: typing.Dict) -> SlackBot:  # noqa: F821
         with open(cfg['config']) as cfgfile:
             config = toml.load(cfgfile)
         if cfg.get('token', None) is not None:
@@ -192,7 +192,7 @@ class SlackBot:
         return cls(token=token, config=config, events_api=cfg.get('events_api', False))
 
     @classmethod
-    def from_argv(cls, argv : typing.List =None) -> SlackBot:
+    def from_argv(cls, argv: typing.List = None) -> SlackBot:  # noqa: F821
         parser = slackmgmt.config.parser.get_parser()
         args = parser.parse_args(argv or sys.argv[1:])
         return cls.from_config(cfg=args.__dict__)

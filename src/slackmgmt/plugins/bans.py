@@ -6,12 +6,12 @@ import slack
 
 
 class BanPlugin:
-    config : typing.Dict
-    _client : slack.WebClient
-    log : logging.Logger
-    queue : asyncio.Queue
+    config: typing.Dict
+    _client: slack.WebClient
+    log: logging.Logger
+    queue: asyncio.Queue
 
-    async def check_ban(self, user : str, channel : str) -> None:
+    async def check_ban(self, user: str, channel: str) -> None:
         if user in self.config.get(channel, {}).get('users', []):
             ret = await self._client.conversations_kick(
                 channel=channel, user=user
