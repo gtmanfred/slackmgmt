@@ -9,10 +9,13 @@ license = "Apache-2.0"
 python = "^3.7"
 aiohttp = "^3.6.2"
 toml = "^0.10.0"
+slackclient = "^2.5.0"
 
 [tool.poetry.dev-dependencies]
 tox = "^3.14"
 pytest = "^5.3"
+flake8 = "^3.7.9"
+mypy = "^0.761"
 
 [build-system]
 requires = ["poetry>=1.0.0"]

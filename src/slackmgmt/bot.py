@@ -4,13 +4,13 @@ import importlib.machinery
 import inspect
 import json
 import logging
-import os.path
 import pathlib
 import random
 import sys
-import textwrap
 
 import aiohttp
+import aiohttp.client_exceptions
+import slack
 import toml
 
 import slackmgmt.config.parser
@@ -45,12 +45,22 @@ class SlackBot:
             logging.basicConfig(level=logging.DEBUG)
         self.log.debug(f'Setup {self.__class__.__name__} Plugin.')
 
+    @property
+    def _client(self):
+        if not hasattr(self, '__client'):
+            self.__client = slack.WebClient(
+                token=self.token,
+                run_async=True
+            )
+        return self.__client
+
     def setup_bots(self):
+        plugin_config = self.config.get('slackmgmt', {}).get('plugins', {})
         for name, botclass in self.bot_classes:
             plugin = type(name, (botclass, SlackBot), {})
             self.bots.append(plugin(
                 self.token,
-                self.config.get('slackmgmt', {}).get('plugins', {}).get(plugin.__name__, {}),
+                plugin_config.get(plugin.__name__, {}),
                 events_api=self.events_api,
             ))
             self.loop.create_task(self.bots[-1].consumer())
@@ -81,6 +91,11 @@ class SlackBot:
             self._bot_classes = self._find_bot_classes()
         return self._bot_classes
 
+    async def channels(self, refresh=False):
+        if refresh is True or not hasattr(SlackBot, '_channels'):
+            SlackBot._channels = await self._client.conversations_list()
+        return SlackBot._channels
+
     def __repr__(self):
         return f'<SlackBot token={self.token} config={self.config}>'
 
@@ -107,24 +122,6 @@ class SlackBot:
                 del self.ws
             self.loop.stop()
 
-    async def api_call(self, method, data=None):
-        """Slack API call."""
-        async with aiohttp.ClientSession(loop=self.loop) as session:
-            form = aiohttp.FormData(data or {})
-            form.add_field('token', self.token)
-            async with session.post(
-                'https://slack.com/api/{0}'.format(method), data=form
-            ) as response:
-                if response.status == 429:
-                    await asyncio.sleep(int(response.headers['Retry-After']))
-                    return await self.api_call(method, data)
-                if response.status != 200:
-                    self.log.debug('Error: %s', response)
-                    raise Exception(
-                        '{0} with {1} failed.'.format(method, data)
-                    )
-                return await response.json()
-
     def pong(self, message):
         self.log.debug(
             'Pong received: {0}'.format(message['reply_to'])
@@ -144,7 +141,7 @@ class SlackBot:
                     await b.queue.put(message)
 
     async def producer(self):
-        rtm = await self.api_call('rtm.start')
+        rtm = await self._client.rtm_start()
         if not rtm['ok']:
             raise ConnectionError('Error connecting to RTM')
         async with aiohttp.ClientSession(loop=self.loop) as session:
@@ -168,7 +165,7 @@ class SlackBot:
                 await self.ws.send_str(
                     json.dumps({'type': 'ping', 'id': msgid})
                 )
-            except self.client_response_error:
+            except aiohttp.client_exceptions.ClientResponseError:
                 break
             await asyncio.sleep(20)
             if msgid != self.msgid:
@@ -184,7 +181,7 @@ class SlackBot:
             token = config['slackmgmt']['token']
         cls.debug = cfg.debug or config['slackmgmt'].get('debug', False)
         return cls(token=token, config=config, events_api=cfg.events_api)
-        
+
     @classmethod
     def from_argv(cls, argv=None):
         parser = slackmgmt.config.parser.get_parser()
